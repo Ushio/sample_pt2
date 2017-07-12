@@ -13,6 +13,7 @@
 #include <vector>
 #include <stb/stb_image_write.h>
 
+#define ENABLE_NEE 1
 
 namespace {
 
@@ -67,6 +68,10 @@ Vector3 radiance(const Ray& input_ray, int depth, Random* random)
     Vector3 W(1, 1, 1);
     Ray ray(input_ray.pos, input_ray.dir);
 
+#if ENABLE_NEE
+	bool direct_visible = true;
+#endif
+
     while(true)
     {
         double t;
@@ -90,7 +95,13 @@ Vector3 radiance(const Ray& input_ray, int depth, Random* random)
 
         auto p = max(obj.color.x, max(obj.color.y, obj.color.z));
 
-        L += W * obj.emission;
+		#if ENABLE_NEE
+		if (direct_visible) {
+			L += W * obj.emission;
+		}
+		#else
+		L += W * obj.emission;
+		#endif
 
         // 打ち切り深度に達したら終わり.
         if(depth > g_max_depth)
@@ -107,7 +118,7 @@ Vector3 radiance(const Ray& input_ray, int depth, Random* random)
         {
         case ReflectionType::Diffuse:
             {
-                #if 1
+                #if ENABLE_NEE
                 // Next Event Estimation
                 {
                     const auto& light = g_spheres[g_lightId];
@@ -133,7 +144,7 @@ Vector3 radiance(const Ray& input_ray, int depth, Random* random)
                     auto rad2 = light.radius * light.radius;
 
                     // 寄与が取れる場合.
-                    if (dot0 >= 0 && dot1 >= 0 && light_dist2 >= rad2)
+                    if (dot0 >= 0 && dot1 >= 0 && light_dist2 >= 0.00001)
                     {
                         double shadow_t;
                         int    shadow_id;
@@ -152,6 +163,7 @@ Vector3 radiance(const Ray& input_ray, int depth, Random* random)
                         }
                     }
                 }
+				direct_visible = false;
                 #endif
 
                 // 基底ベクトル.
