@@ -191,6 +191,10 @@ Vector3 radiance(const Ray& input_ray, int depth, Random* random)
             {
                 ray = Ray(hit_pos, reflect(ray.dir, normal));
                 W *= (obj.color / p);
+
+				#if ENABLE_NEE
+				direct_visible = true;
+				#endif
             }
             break;
 
@@ -232,6 +236,10 @@ Vector3 radiance(const Ray& input_ray, int depth, Random* random)
                     ray = Ray(hit_pos, dir);
                     W *= (obj.color * Tr / (1.0 - prob)) / p;
                 }
+
+				#if ENABLE_NEE
+				direct_visible = true;
+				#endif
             }
             break;
         }
